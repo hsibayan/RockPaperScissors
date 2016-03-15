@@ -3,20 +3,27 @@ package com.example.hannah.rpsnew;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.Typeface;
+import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.Spinner;
 import android.widget.TextView;
+import android.widget.Toast;
 
 public class StartActivity extends AppCompatActivity {
 
@@ -29,7 +36,8 @@ public class StartActivity extends AppCompatActivity {
     //--------------------
 
     View connectView;
-
+    protected Intent play;
+    public static Communicator communicator = new Communicator();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -58,6 +66,7 @@ public class StartActivity extends AppCompatActivity {
         ArrayAdapter<String> adapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_dropdown_item, items);
         roundsDropdown.setAdapter(adapter);
 
+        this.play = new Intent(this, GameActivity.class);
 
 
         connectBtn.setOnClickListener(new View.OnClickListener() {
@@ -70,7 +79,15 @@ public class StartActivity extends AppCompatActivity {
         startBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-//                new waitConnection().execute();
+                int rounds;
+                String selected = (String) roundsDropdown.getSelectedItem();
+                if(selected.equals("race to 5"))
+                    rounds =5;
+                else rounds = 10;
+
+                new waitConnection().execute(rounds);
+
+                Toast.makeText(context, "Now waiting for connections", Toast.LENGTH_LONG).show();
             }
         });
 
@@ -92,9 +109,9 @@ public class StartActivity extends AppCompatActivity {
         dialog.setPositiveButton("Connect", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
-                //Intent game = new Intent(view.getContext(), GameActivity.class);
-//                    EditText et = (EditText) connectView.findViewById(R.id.address);
-//                    new startConnection().execute(et.getText().toString());
+                //Dis will connect.
+                EditText et = (EditText) connectView.findViewById(R.id.address);
+                new startConnection().execute(et.getText().toString());
                 dialog.dismiss();
             }
         });
@@ -124,4 +141,44 @@ public class StartActivity extends AppCompatActivity {
 
         return super.onOptionsItemSelected(item);
     }
+
+
+    public class waitConnection extends AsyncTask<Integer,Void,Void> {
+
+
+        @Override
+        protected Void doInBackground(Integer... params) {
+            Log.i("jet", "Waiting For connection");
+
+            StartActivity.communicator.TryGame(params[0]);
+
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(Void aVoid) {
+            //startView.removeView(loadingView);
+            super.onPostExecute(aVoid);
+            startActivity(play);
+        }
+    }
+
+    public class startConnection extends AsyncTask<String,Void,Void> {
+
+
+        @Override
+        protected Void doInBackground(String... params) {
+            Log.i("jet", "Trying to connect");
+            StartActivity.communicator.TryHandshake(params[0]);
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(Void aVoid) {
+            //startView.removeView(loadingView);
+            super.onPostExecute(aVoid);
+            startActivity(play);
+        }
+    }
+
 }

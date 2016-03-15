@@ -1,4 +1,7 @@
 <resources>
     <string name="app_name">RPS New</string>
     <string name="action_settings">Settings</string>
+    <string name="title_activity_done_">Done_Activity</string>
+
+    <string name="hello_world">Hello world!</string>
 </resources>
